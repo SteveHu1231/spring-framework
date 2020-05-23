@@ -534,7 +534,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	protected Object doCreateBean(final String beanName, final RootBeanDefinition mbd, final @Nullable Object[] args)
 			throws BeanCreationException {
 
-		// Instantiate the bean.
+		//1. 实例化对象方式
+		//(1)obtainFromSupplier 5.0出现
+		//(2)通过instantiateUsingFactoryMethod 通过工厂方法
+		//(3)无参构造器 反射
+		//(4)有参构造器 反射
 		BeanWrapper instanceWrapper = null;
 		if (mbd.isSingleton()) {
 			instanceWrapper = this.factoryBeanInstanceCache.remove(beanName);
