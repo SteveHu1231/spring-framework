@@ -79,7 +79,10 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	/** Cache of early singleton objects: bean name to bean instance. */
 	private final Map<String, Object> earlySingletonObjects = new HashMap<>(16);
 
-	/** Set of registered singletons, containing the bean names in registration order. */
+	/** Set of registered singletons, containing the bean names in registration order.
+	 * 	感觉只是存了单例的 name, 并不是对象
+	 * 	@see DefaultSingletonBeanRegistry#getSingletonNames()
+	 * */
 	private final Set<String> registeredSingletons = new LinkedHashSet<>(256);
 
 	/** Names of beans that are currently in creation. */
@@ -140,8 +143,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	}
 
 	/**
-	 * Add the given singleton factory for building the specified singleton
-	 * if necessary.
+	 * 将 singletonFactory对象 添加到 singletonFactories Map中.
 	 * <p>To be called for eager registration of singletons, e.g. to be able to
 	 * resolve circular references.
 	 * @param beanName the name of the bean
@@ -149,10 +151,14 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 */
 	protected void addSingletonFactory(String beanName, ObjectFactory<?> singletonFactory) {
 		Assert.notNull(singletonFactory, "Singleton factory must not be null");
+		//如果创建好了的单例工厂中没有这个正在创建的bean,
 		synchronized (this.singletonObjects) {
 			if (!this.singletonObjects.containsKey(beanName)) {
+				//Map把单例工厂 和beanName绑定,主要是通过这个Map来解决循环依赖
 				this.singletonFactories.put(beanName, singletonFactory);
+				//至于为什么需要这个二级缓存,很疑惑.只是因为在 getSingleton时先从二级缓存中获取的缘故吗?
 				this.earlySingletonObjects.remove(beanName);
+				//已注册单例 Set中添加这个Bean
 				this.registeredSingletons.add(beanName);
 			}
 		}
@@ -165,9 +171,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	}
 
 	/**
-	 * Return the (raw) singleton object registered under the given name.
-	 * <p>Checks already instantiated singletons and also allows for an early
-	 * reference to a currently created singleton (resolving a circular reference).
+	 * 获取单例
 	 * @param beanName the name of the bean to look for
 	 * @param allowEarlyReference whether early references should be created or not
 	 * @return the registered singleton object, or {@code null} if none found

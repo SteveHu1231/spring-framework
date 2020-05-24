@@ -512,48 +512,54 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		return this.applicationListeners;
 	}
 
+	/**
+	 * 刷新整个ApplicationContext,并没有销毁整个ApplicationContext.
+	 * @throws BeansException
+	 * @throws IllegalStateException
+	 */
 	@Override
 	public void refresh() throws BeansException, IllegalStateException {
 		synchronized (this.startupShutdownMonitor) {
-			// Prepare this context for refreshing.
+			//做一些准备工作
 			prepareRefresh();
 
-			// Tell the subclass to refresh the internal bean factory.
+			//1. 获取Factory
+			// 告诉子类刷新内部的bean factory 销毁再创建
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
-			// Prepare the bean factory for use in this context.
+			//2.准备beanFactory
 			prepareBeanFactory(beanFactory);
 
 			try {
-				// Allows post-processing of the bean factory in context subclasses.
+				//3.后置处理beanFactory
+				// 对BeanFactory做一些后置处理, 添加一些后置处理器之类的,允许子类修改.
 				postProcessBeanFactory(beanFactory);
 
-				// Invoke factory processors registered as beans in the context.
+				//4.调用Bean Factory后处理器
+				// 这个时候去调用BeanFactoryPostProcessors
 				invokeBeanFactoryPostProcessors(beanFactory);
 
-				// Register bean processors that intercept bean creation.
+				//注册拦截Bean创建的Bean处理器
 				registerBeanPostProcessors(beanFactory);
 
-				// Initialize message source for this context.
+				//为此上下文初始化消息源。
 				initMessageSource();
 
-				// Initialize event multicaster for this context.
+				//初始化ApplicationEventMulticaster
 				initApplicationEventMulticaster();
 
-				// Initialize other special beans in specific context subclasses.
+				//允许子类做特殊处理
 				onRefresh();
 
-				// Check for listener beans and register them.
+				//添加将ApplicationListener实现为侦听器的bean。不影响其他侦听器，不是Bean也可以添加
 				registerListeners();
 
-				// Instantiate all remaining (non-lazy-init) singletons.
+				//初始化所有非懒加载的bean
 				finishBeanFactoryInitialization(beanFactory);
 
-				// Last step: publish corresponding event.
+				//发布完成刷新的时间.
 				finishRefresh();
-			}
-
-			catch (BeansException ex) {
+			} catch (BeansException ex) {
 				if (logger.isWarnEnabled()) {
 					logger.warn("Exception encountered during context initialization - " +
 							"cancelling refresh attempt: " + ex);
@@ -567,9 +573,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 				// Propagate exception to caller.
 				throw ex;
-			}
-
-			finally {
+			} finally {
 				// Reset common introspection caches in Spring's core, since we
 				// might not ever need metadata for singleton beans anymore...
 				resetCommonCaches();
@@ -582,6 +586,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * active flag as well as performing any initialization of property sources.
 	 */
 	protected void prepareRefresh() {
+		//开始时间
 		this.startupDate = System.currentTimeMillis();
 		this.closed.set(false);
 		this.active.set(true);
@@ -590,15 +595,14 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			logger.info("Refreshing " + this);
 		}
 
-		// Initialize any placeholder property sources in the context environment
+		//在上下文环境中初始化任何占位符属性源
 		initPropertySources();
 
 		// Validate that all properties marked as required are resolvable
 		// see ConfigurablePropertyResolver#setRequiredProperties
 		getEnvironment().validateRequiredProperties();
 
-		// Allow for the collection of early ApplicationEvents,
-		// to be published once the multicaster is available...
+		//允许早期的ApplicationEvent的收集，一旦多播器可用，就可以发布...
 		this.earlyApplicationEvents = new LinkedHashSet<>();
 	}
 
@@ -676,10 +680,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	}
 
 	/**
-	 * Modify the application context's internal bean factory after its standard
-	 * initialization. All bean definitions will have been loaded, but no beans
-	 * will have been instantiated yet. This allows for registering special
-	 * BeanPostProcessors etc in certain ApplicationContext implementations.
+	 * 初始化完成后的修改 ,这允许在某些ApplicationContext实现中注册特殊的BeanPostProcessors等。
 	 * @param beanFactory the bean factory used by the application context
 	 */
 	protected void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
