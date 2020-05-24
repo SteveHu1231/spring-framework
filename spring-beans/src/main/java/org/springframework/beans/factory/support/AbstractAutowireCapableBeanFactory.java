@@ -1740,6 +1740,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					beanName, "Invocation of init method failed", ex);
 		}
 		//这里是Aop  AnnotationAwareAspectJAutoProxyCreator => postProcessAfterInitialization  => 创建代理
+		//这里还是 applicationListener 注入的时候   ,事件发布后会调用 onApplicationEvent 方法
 		if (mbd == null || !mbd.isSynthetic()) {
 			wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
 		}
